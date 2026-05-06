@@ -14,9 +14,9 @@ This is **not a meeting app.** It is not production software. It demonstrates an
 
 ## Status
 
-Work in progress. Spec phase complete; build follows in milestones (see below).
+> **Spec complete, implementation in progress.** This repository currently contains the architecture spec and milestone plan. Runnable code lands milestone by milestone — see *Milestones* below.
 
-- Narrative walkthrough: [Dev.to series](https://dev.to/lutzleonhardt) *(post 1 in progress)*
+- Narrative walkthrough: [Dev.to series](https://dev.to/lutz_leonhardt) — Part 1 published
 - Full architectural spec: [`specs/SPEC.md`](specs/SPEC.md)
 
 ## Architecture in One Sketch
@@ -94,9 +94,32 @@ Each milestone produces a usable artifact. See [`specs/SPEC.md`](specs/SPEC.md) 
 
 ## Why This Pattern
 
-Heterogeneity in enterprise frontends is permanent. Acquisitions bring new stacks. Teams pick what they know. The rewrite-first approach treats this as a problem to be eliminated; this repo treats it as a constraint to design with.
+Heterogeneity in enterprise frontends is permanent. Acquisitions bring new stacks, teams pick what they know, framework tides shift. The rewrite-first approach treats this as a problem to be eliminated; this repo treats it as a constraint to design with.
 
-The pattern shown here lets a team ship a new capability in *any* framework without touching the existing app. Old code keeps shipping; new capabilities arrive as islands. No all-or-nothing rewrite gate.
+This pattern is for:
+
+- **Acquired frontend stacks** that must coexist with the parent's stack
+- **Long-lived Angular (or React, or Vue) shells** that need to keep shipping
+- **Teams that cannot rewrite everything** — and shouldn't have to
+- **Capabilities easier to build in another ecosystem** (Excalidraw is React; you don't port it)
+- **Migration paths** where old and new must coexist for years, not weeks
+
+Old code keeps shipping. New capabilities arrive as islands. No all-or-nothing rewrite gate.
+
+## Out of Scope (Production Concerns)
+
+This is a demo of an integration architecture, not a production application. Deliberately out of scope:
+
+- Authentication and authorization
+- Cross-origin deployment, CSP, SRI hardening
+- Backend persistence, server-side rendering
+- Multi-user collaboration, optimistic locking, CRDTs
+- Contract versioning between host and remotes
+- Observability, error boundaries, remote-availability fallback
+- Mobile responsive layouts (desktop-only by design)
+- Tests
+
+If your reaction is *"but a real production system would need X"*: yes, exactly. The architecture is what's being demonstrated, not a production-ready meeting app.
 
 ## Reading Order
 
