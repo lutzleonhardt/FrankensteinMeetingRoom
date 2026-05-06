@@ -100,7 +100,7 @@ The pattern shown here lets a team ship a new capability in *any* framework with
 
 ## Reading Order
 
-1. The [Dev.to post](https://dev.to/lutzleonhardt) for the narrative and the *why*.
+1. The [Dev.to post](https://dev.to/lutz_leonhardt/-the-frankenstein-meeting-room-how-to-stitch-angular-react-and-svelte-into-one-app-351g) for the narrative and the *why*.
 2. [`specs/SPEC.md`](specs/SPEC.md) for the technical depth.
 3. The code, milestone by milestone.
 
