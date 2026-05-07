@@ -84,7 +84,7 @@ Each remote is **also runnable standalone** — open the localhost URL of a remo
 
 ## Milestones
 
-- [ ] **M1** — Workspace + Host Skeleton + Federation Init
+- [x] **M1** — Workspace + Host Skeleton + Federation Init
 - [ ] **M2** — Host complete: Calendar + State + Layout + Bus Log
 - [ ] **M3** — React Whiteboard Remote (standalone + integrated)
 - [ ] **M4** — Svelte Mermaid Remote (standalone + integrated)
