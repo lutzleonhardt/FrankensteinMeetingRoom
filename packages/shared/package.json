@@ -1,0 +1,11 @@
+{
+  "name": "@frankenstein/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./bus": "./src/bus.ts",
+    "./types": "./src/types.ts",
+    "./seed": "./src/seed.ts"
+  }
+}

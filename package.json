@@ -1,0 +1,8 @@
+{
+  "name": "frankenstein-meeting-room",
+  "private": true,
+  "version": "0.0.0",
+  "devDependencies": {
+    "typescript": "~5.6.0"
+  }
+}

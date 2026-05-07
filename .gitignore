@@ -1,2 +1,6 @@
 .brokk/
 .idea/
+node_modules/
+dist/
+.angular/
+*.log
