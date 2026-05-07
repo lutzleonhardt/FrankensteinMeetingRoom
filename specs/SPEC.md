@@ -587,7 +587,7 @@ The demo is structured around named integration moments — not features. Each m
 
 Scope-boxed sequence — each milestone produces a usable artifact at which you can stop, demo what's working, and continue with confidence. The order matters; the calendar dates do not. The 2–5-day budget from *Goal & Non-Goal* applies as a ceiling, not as a per-step quota.
 
-### M1 — Workspace + Host Skeleton + Federation Init
+### [x] M1 — Workspace + Host Skeleton + Federation Init
 
 - pnpm workspace initialized (`pnpm-workspace.yaml`, root `package.json`, `tsconfig.base.json`)
 - `packages/shared/` with stub `bus.ts`, `types.ts`, `seed.ts`
@@ -596,7 +596,7 @@ Scope-boxed sequence — each milestone produces a usable artifact at which you 
 
 **Artifact.** Empty shell renders a header *"Frankenstein Meeting Room"*; browser console shows Federation init output. The federation infrastructure is live and extensible.
 
-### M2 — Host Complete: Calendar + State + Layout + Bus Log
+### [ ] M2 — Host Complete: Calendar + State + Layout + Bus Log
 
 - Schedule-X integrated (weekly view) in left column
 - `MeetingService` fully implemented (Signals, `loadAll`/`persistAll`, bus listeners, `selectMeeting` / `updateMeeting` / `rebroadcastCurrent`)
@@ -606,7 +606,7 @@ Scope-boxed sequence — each milestone produces a usable artifact at which you 
 
 **Artifact.** Complete host UI with sample data. Click a meeting → details fill, event appears in log. Reload preserves any state mutation. Middle slots show *"Pick a meeting"* placeholder. The host can be demoed as a self-contained Angular app — no remotes required yet.
 
-### M3 — React Whiteboard Remote (Standalone + Integrated)
+### [ ] M3 — React Whiteboard Remote (Standalone + Integrated)
 
 - `packages/whiteboard/` with `federation.config.mjs`, `build.mjs`, `package.json`
 - React app with Excalidraw inside Custom Element wrapper (`createRoot` in `connectedCallback`)
@@ -616,7 +616,7 @@ Scope-boxed sequence — each milestone produces a usable artifact at which you 
 
 **Artifact.** Two delivery modes both working: (a) `npm start` in `whiteboard/` renders Excalidraw with mock-host data on `:3000`; (b) shell on `:4200` lazy-loads the remote when a meeting is selected, drawing changes persist via the host. **First federation stitching live: Angular host and React remote talking through the bus.**
 
-### M4 — Svelte Mermaid Remote (Standalone + Integrated)
+### [ ] M4 — Svelte Mermaid Remote (Standalone + Integrated)
 
 - `packages/mermaid/` analogous to M3, with Svelte 5 + Mermaid lib
 - `esbuild-svelte` plugin in `build.mjs`
@@ -626,7 +626,7 @@ Scope-boxed sequence — each milestone produces a usable artifact at which you 
 
 **Artifact.** Both remotes running, V1 complete. **Money-Shot is now recordable:** Angular calendar on the left, Excalidraw and Mermaid both rendering for the same meeting in the middle, DevTools Network tab shows three frameworks loaded. Integration Moments 1–4 are alive.
 
-### M5 — Polish + Stretch
+### [ ] M5 — Polish + Stretch
 
 - Curated sample data that tells a story (e.g. "Architecture Review" meeting with a pre-filled whiteboard sketch and Mermaid sequence diagram)
 - README with architecture diagram, setup instructions, demo-flow walkthrough
