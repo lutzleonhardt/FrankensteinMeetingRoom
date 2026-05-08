@@ -7,12 +7,37 @@ type DeepReadonly<T> =
   T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } :
   T;
 
-type BusEvents = {
+// Single source of truth for the bus event-name set. `BusEventName` is derived
+// from this tuple so subscribers can iterate it at runtime; the
+// `_busEventsExhaustive` assertion below keeps the tuple and the payload map
+// in lockstep at compile time.
+export const ALL_BUS_EVENTS = [
+  'context:request',
+  'event:selected',
+  'drawing:changed',
+  'diagram:changed',
+] as const;
+
+export type BusEventName = (typeof ALL_BUS_EVENTS)[number];
+
+export type BusEvents = {
   'context:request': {};
   'event:selected':  DeepReadonly<{ meetingId: string; initialData: Meeting }>;
   'drawing:changed': DeepReadonly<{ meetingId: string; excalidrawData: ExcalidrawDemoData }>;
   'diagram:changed': DeepReadonly<{ meetingId: string; mermaidSource: string }>;
 };
+
+// Drift guard: if a name is added to ALL_BUS_EVENTS without a payload entry in
+// BusEvents (or vice-versa), one of the Exclude<> aliases becomes a non-never
+// union and the assertion `true` no longer assignable.
+type _MissingFromMap   = Exclude<BusEventName, keyof BusEvents>;
+type _MissingFromTuple = Exclude<keyof BusEvents, BusEventName>;
+type _ExhaustivenessAssertion =
+  [_MissingFromMap, _MissingFromTuple] extends [never, never]
+    ? true
+    : ['BUS_EVENTS_OUT_OF_SYNC', _MissingFromMap, _MissingFromTuple];
+const _busEventsExhaustive: _ExhaustivenessAssertion = true;
+void _busEventsExhaustive;
 
 const bus = ((globalThis as any).frankensteinBus ??= new EventTarget()) as EventTarget;
 

@@ -1,0 +1,15 @@
+<h2 class="header">Event Bus Log</h2>
+
+@if (entries().length === 0) {
+  <p class="empty">Bus is quiet.</p>
+} @else {
+  <ul class="list">
+    @for (e of entries(); track $index) {
+      <li class="row">
+        <span class="at">{{ e.at }}</span>
+        <span class="name">{{ e.name }}</span>
+        <span class="payload">{{ preview(e.payload) }}</span>
+      </li>
+    }
+  </ul>
+}
