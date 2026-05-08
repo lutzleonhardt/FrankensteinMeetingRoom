@@ -2,6 +2,11 @@
 
 **Spec:** `specs/SPEC.md`, Milestone M2.
 
+**Task numbering.** Continues from M1 (last task = 2). Tasks in
+this plan are 3 → 6. Numbering is globally sequential across the
+repo so every `docs/task-log/task-N-*.md` filename stays unique;
+the milestone identity lives in this plan's filename.
+
 **Builds on:** M1 (`docs/plans/m1-workspace-and-host-skeleton.md`,
 task logs `task-1`, `task-2`). Workspace, `@frankenstein/shared` (bus,
 types, **seed already populated with 3 sample meetings in the current
@@ -54,7 +59,7 @@ review findings.
 
 ---
 
-## Task 1: Three-column layout shell + viewport gate
+## Task 3: Three-column layout shell + viewport gate
 
 ### Instructions
 
@@ -66,12 +71,12 @@ just the boxes, the placeholders, and the desktop-only gate.
 the existing `<header>`:
 
 - `grid-template-columns: 25% 50% 25%`.
-- Left column: a single empty box reserved for the calendar (Task 2).
+- Left column: a single empty box reserved for the calendar (Task 4).
 - Middle column: vertically split (`grid-template-rows: 1fr 1fr`),
   each cell renders a centered "Pick a meeting" placeholder.
 - Right column: vertically split, top cell is a "Meeting Details"
-  placeholder card (replaced in Task 4), bottom cell is an
-  "Event Bus Log" placeholder card (replaced in Task 3).
+  placeholder card (replaced in Task 6), bottom cell is an
+  "Event Bus Log" placeholder card (replaced in Task 5).
 - Total height fills `100vh` minus the existing `<header>`. Use
   `min-height: 0` on grid children so children with their own
   scrollable content (later: bus log) don't blow out the layout.
@@ -94,9 +99,9 @@ extract only if `app.html` would otherwise exceed ~40 lines.
 - **Three-column grid is fixed** — no responsive breakpoints inside
   it. Spec explicitly out-of-scopes mobile responsive (line 651).
   Tablet landscape may degrade gracefully but is not actively tested.
-- **Placeholders are throwaway DOM.** Task 2 replaces the left box
-  with `<app-calendar>`, Task 3 replaces the right-bottom box with
-  `<app-bus-log>`, Task 4 replaces the right-top box with
+- **Placeholders are throwaway DOM.** Task 4 replaces the left box
+  with `<app-calendar>`, Task 5 replaces the right-bottom box with
+  `<app-bus-log>`, Task 6 replaces the right-top box with
   `<app-meeting-details>`. The middle two cells stay as "Pick a
   meeting" placeholders all the way through M2 — they become the
   whiteboard / mermaid Custom Element slots in M3 / M4.
@@ -126,9 +131,9 @@ extract only if `app.html` would otherwise exceed ~40 lines.
 
 ---
 
-## Task 2: Schedule-X weekly calendar + click emits `event:selected` to bus
+## Task 4: Schedule-X weekly calendar + click emits `event:selected` to bus
 
-**Depends on Task 1** (needs the left-column slot to drop into).
+**Depends on Task 3** (needs the left-column slot to drop into).
 
 ### Instructions
 
@@ -136,7 +141,7 @@ Install Schedule-X, render a weekly calendar with the three seeded
 meetings in the left column, and wire `onEventClick` to emit
 `event:selected` directly to the shared bus. **No `MeetingService`
 yet** — the direct emit is a temporary architectural shortcut so
-Task 3 (Bus Log) has something visible to display. Task 4 refactors
+Task 5 (Bus Log) has something visible to display. Task 6 refactors
 this to route through the service.
 
 **Install dependencies (from repo root):**
@@ -183,13 +188,13 @@ pnpm -F shell add @schedule-x/angular @schedule-x/calendar @schedule-x/theme-def
   emit('event:selected', { meetingId: m.id, initialData: m });
   ```
 
-  Add a one-line comment: `// TODO Task 4: route through MeetingService`.
+  Add a one-line comment: `// TODO Task 6: route through MeetingService`.
 - Template: `<sx-calendar [calendarApp]="calendarApp"></sx-calendar>`
   inside a wrapper `<div class="ng-calendar-wrapper">` styled with
   `width: 100%; height: 100%; min-height: 0;` (deviation from docs'
   fixed `1200×800` because we live in a grid cell).
 - Drop `<app-calendar>` into the left column of the layout from
-  Task 1, replacing the empty box.
+  Task 3, replacing the empty box.
 
 ### Key Discoveries
 
@@ -204,14 +209,14 @@ pnpm -F shell add @schedule-x/angular @schedule-x/calendar @schedule-x/theme-def
   scoped away by Angular's view encapsulation. Global import is the
   expected path.
 - **Direct bus emit is a temporary shortcut.** The spec mandates that
-  the service is the single broadcast point (line 110). Task 4
+  the service is the single broadcast point (line 110). Task 6
   refactors `onEventClick` to call `meetingService.selectMeeting(id)`
   and replaces `seed` import with `meetingService.meetings()`. Task
-  ordering is deliberate: Task 3 needs *some* bus traffic to verify
+  ordering is deliberate: Task 5 needs *some* bus traffic to verify
   the log without standing up the full service yet.
 - **`Meeting.id` is a string.** Schedule-X event ids are
   `string | number`; cast `e.id as string` rather than introspecting
-  the original `Meeting` (round-trip the id so Task 4's refactor is
+  the original `Meeting` (round-trip the id so Task 6's refactor is
   a single-line change).
 - **Federation & Schedule-X.** Schedule-X is a host-only dependency,
   never federated — the host owns the calendar. M3 / M4 don't touch
@@ -221,7 +226,7 @@ pnpm -F shell add @schedule-x/angular @schedule-x/calendar @schedule-x/theme-def
   both explicitly; do not rely on hoisting.
 - **No event re-fetch on data change.** M2 has no UI to mutate
   meeting metadata (Create / Delete are M5 stretch). The calendar can
-  read `seed` once at construction. Task 4 swaps `seed` for
+  read `seed` once at construction. Task 6 swaps `seed` for
   `meetingService.meetings()` but still reads once — re-fetch on
   signal change is M5 territory.
 
@@ -251,9 +256,9 @@ pnpm -F shell add @schedule-x/angular @schedule-x/calendar @schedule-x/theme-def
 
 ---
 
-## Task 3: Event Bus Log component (right-bottom slot)
+## Task 5: Event Bus Log component (right-bottom slot)
 
-**Depends on Task 2** (needs `event:selected` traffic to verify).
+**Depends on Task 4** (needs `event:selected` traffic to verify).
 
 ### Instructions
 
@@ -290,7 +295,7 @@ service in the middle.
 - Make the list scrollable inside the right-bottom card
   (`overflow: auto`, fixed parent height).
 - Drop `<app-bus-log>` into the right-bottom slot of the layout from
-  Task 1, replacing the placeholder.
+  Task 3, replacing the placeholder.
 
 ### Key Discoveries
 
@@ -331,7 +336,7 @@ service in the middle.
   and
   `frankensteinBus.dispatchEvent(new CustomEvent('context:request', { detail: {} }))`
   → both rows appear (the second has no further effect since no
-  service yet — Task 4 wires the response). Proves the log is a
+  service yet — Task 6 wires the response). Proves the log is a
   generic subscriber, not coupled to the calendar.
 - Reload the page → bus log resets to empty state ("Bus is quiet.").
   Spec design — log is per-session.
@@ -347,7 +352,7 @@ service in the middle.
 
 ---
 
-## Task 4: `MeetingService` + Meeting Details panel + route calendar through the service
+## Task 6: `MeetingService` + Meeting Details panel + route calendar through the service
 
 **Depends on Tasks 2 + 3** (refactors the calendar's emit and
 verifies via the bus log).
@@ -408,7 +413,7 @@ class MeetingService {
 - Drop into the right-top slot of the layout, replacing the
   placeholder card.
 
-**Refactor the calendar (Task 2 → Task 4 wiring).**
+**Refactor the calendar (Task 4 → Task 6 wiring).**
 
 - Inject `MeetingService` into `calendar.ts`.
 - `onEventClick(e)` body becomes:
@@ -440,7 +445,7 @@ class MeetingService {
 - **Service is the single broadcast point.** Every entry path that
   mutates context (calendar click today; deep-link or hotkey later)
   goes through `selectMeeting` → state update + `event:selected`
-  emit in the same call. Task 4's calendar refactor is what enforces
+  emit in the same call. Task 6's calendar refactor is what enforces
   this.
 - **`context:request` boot pattern is wired in M2 already**, even
   though no remote will fire it until M3. Verifiable from DevTools:
