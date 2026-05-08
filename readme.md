@@ -47,6 +47,27 @@ Each remote is a complete app in its own framework, exposed as a Custom Element.
 | Persistence | LocalStorage |
 | Workspace | pnpm |
 
+### Host-only deps live in `devDependencies`
+
+Schedule-X and its transitive runtime (`preact`, `@preact/signals`,
+`temporal-polyfill`) are pinned in the shell's **devDependencies**, not
+`dependencies`. Same goes for `@frankenstein/shared`. The reason is
+Native Federation's share map: `shareAll` iterates `dependencies` only,
+so anything listed there gets emitted as a separately-loaded shared
+chunk and added to the import map for remotes to consume.
+
+For host-only code that no remote will ever import — the calendar, the
+internal bus types — sharing buys nothing and costs real correctness.
+The Schedule-X Preact tree in particular breaks the moment the runtime
+sees two Preact module instances (federated copy + a deep-import path
+that slips past the import map), with the canonical `__H` undefined
+crash. Keeping these out of `dependencies` sidesteps the whole class
+of single-instance / version-skew problems and lets vite bundle one
+copy inline.
+
+Rule of thumb: if a remote will never `import` it, it's a
+`devDependency` of the shell.
+
 ## Repository Layout
 
 ```

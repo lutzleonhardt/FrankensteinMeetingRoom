@@ -1,7 +1,29 @@
+@import '@schedule-x/theme-default/dist/index.css';
+
 html,
 body {
   margin: 0;
   height: 100%;
+  overflow: hidden;
+}
+
+/* Schedule-X's @schedule-x/angular wrapper renders an unstyled
+   <div class="ng-calendar-wrapper"> inside <sx-calendar> and mounts
+   the Preact tree there. Schedule-X's theme CSS doesn't size that
+   div, so percentage-height resolution breaks at this link in the
+   chain and the calendar grows to its 1600 px content height. */
+.ng-calendar-wrapper {
+  height: 100%;
+  min-height: 0;
+}
+
+/* Schedule-X ships .sx__view-container as `flex: 1; overflow-y: auto`
+   without `min-height: 0`. In a column-flex parent that lets the
+   container grow to the fixed 1600 px week-grid content, so the
+   inner scroll never engages and the grid gets clipped by the
+   parent's `overflow: hidden`. Restore the missing constraint. */
+.sx__view-container {
+  min-height: 0;
 }
 
 body {
