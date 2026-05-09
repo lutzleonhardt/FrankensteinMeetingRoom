@@ -1,0 +1,9 @@
+@if (meeting(); as m) {
+  <h2 class="title">{{ m.title }}</h2>
+  <p class="when">{{ formattedRange() }}</p>
+  <p class="attendees">
+    <span class="label">Attendees:</span> {{ attendeeList() }}
+  </p>
+} @else {
+  <p class="empty">Select a meeting from the calendar.</p>
+}
