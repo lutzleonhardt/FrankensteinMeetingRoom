@@ -14,6 +14,9 @@ importers:
 
   packages/mermaid:
     dependencies:
+      '@softarc/native-federation-orchestrator':
+        specifier: 4.0.0
+        version: 4.0.0
       mermaid:
         specifier: ^11.4.1
         version: 11.14.0
@@ -24,6 +27,12 @@ importers:
       '@frankenstein/shared':
         specifier: workspace:*
         version: link:../shared
+      '@softarc/native-federation':
+        specifier: ~4.0.0
+        version: 4.0.1(typescript@5.9.3)
+      '@softarc/native-federation-esbuild':
+        specifier: 4.0.0-RC10
+        version: 4.0.0-RC10(typescript@5.9.3)
       esbuild:
         specifier: ^0.25.1
         version: 0.25.12

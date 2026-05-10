@@ -1,16 +1,23 @@
 import { createServer } from 'http';
-import { readFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync, readdirSync, copyFileSync } from 'fs';
 import { extname, join } from 'path';
 import * as esbuild from 'esbuild';
 import sveltePlugin from 'esbuild-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
+import { runEsBuildBuilder } from '@softarc/native-federation-esbuild';
 
 const args = new Set(process.argv.slice(2));
 const isDev = args.has('--dev');
+const isFederate = args.has('--federate');
+const isDebug = args.has('--debug');
 
 mkdirSync('dist', { recursive: true });
 
-await buildStandalone({ dev: isDev });
+if (isFederate) {
+  await buildFederate();
+} else {
+  await buildStandalone({ dev: isDev });
+}
 
 async function buildStandalone({ dev }) {
   const ctx = await esbuild.context({
@@ -40,6 +47,49 @@ async function buildStandalone({ dev }) {
     await ctx.dispose();
     console.log('Mermaid standalone build complete.');
   }
+}
+
+async function buildFederate() {
+  // Diagnostic mode (--debug): switches the entire NF pipeline to dev — gets
+  // sourcemaps + readable output AND has the share chunks referenced in
+  // importmap.json/remoteEntry.json (NF emits `<name>-dev.js` filenames in
+  // dev mode and the orchestrator picks them up via the manifest). Same
+  // diagnostic infra as packages/whiteboard/build.mjs (T8 Decision #4).
+  // No fileReplacements: Svelte 5 emits native ESM, so the React jsx-runtime
+  // CJS dispatcher bug (T8 Decisions #6/#7) does not apply here.
+  const federation = await runEsBuildBuilder('federation.config.js', {
+    outputPath: 'dist',
+    tsConfig: 'tsconfig.json',
+    dev: isDebug,
+    watch: false,
+    entryPoints: ['src/bootstrap.ts'],
+    adapterConfig: {
+      plugins: [
+        sveltePlugin({
+          preprocess: sveltePreprocess(),
+          compilerOptions: { dev: isDebug },
+        }),
+      ],
+      define: { 'process.env.NODE_ENV': isDebug ? '"development"' : '"production"' },
+    },
+  });
+  await federation.close();
+
+  // Plan-block §Step 3 said "no CSS-copy step", reasoning that Mermaid
+  // inlines diagram styles into rendered SVG. Correct for Mermaid's library
+  // CSS — but `MermaidEditor.svelte`'s <style> block (grid layout, textarea
+  // sizing, error pane) is compiled by esbuild-svelte into a CSS sidecar
+  // emitted next to the Bootstrap chunk. JS and CSS file hashes differ, so
+  // the CE can't derive the CSS filename from import.meta.url alone. Copy
+  // it to a stable name (`mermaid-editor.css`) so the CE wrapper can
+  // resolve it via `new URL('./mermaid-editor.css', import.meta.url).href`.
+  // T9 log Key Decisions §3 already flagged this as a T10 surface.
+  const cssSidecar = readdirSync('dist').find((f) => /^Bootstrap-.*\.css$/.test(f));
+  if (cssSidecar) {
+    copyFileSync(join('dist', cssSidecar), join('dist', 'mermaid-editor.css'));
+  }
+
+  console.log('Mermaid federate build complete.');
 }
 
 function startDevServer() {
