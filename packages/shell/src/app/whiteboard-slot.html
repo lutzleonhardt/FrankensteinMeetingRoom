@@ -1,0 +1,7 @@
+@if (remoteReady() && hasMeeting()) {
+  <whiteboard-remote class="remote-mount"></whiteboard-remote>
+} @else if (!remoteReady()) {
+  <div class="placeholder">Loading whiteboard…</div>
+} @else {
+  <div class="placeholder">Pick a meeting</div>
+}

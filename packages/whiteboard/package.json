@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node build.mjs --dev",
     "build": "node build.mjs",
-    "build:federate": "node build.mjs --federate"
+    "build:federate": "node build.mjs --federate",
+    "build:federate:debug": "node build.mjs --federate --debug"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "~0.18.1",

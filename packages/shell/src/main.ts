@@ -1,4 +1,4 @@
-import { initFederation } from '@softarc/native-federation-orchestrator';
+import { initFederation, NativeFederationResult } from '@softarc/native-federation-orchestrator';
 import {
   useShimImportMap,
   consoleLogger,
@@ -12,7 +12,7 @@ initFederation('federation.manifest.json', {
   hostRemoteEntry: './remoteEntry.json',
   logLevel: 'debug',
 })
-  // Scaffold default: log and continue so one offline remote doesn't brick the shell. Revisit at M2/M3 to fail fast on host/manifest init errors vs. degrade per remote.
-  .catch((err) => console.error(err))
-  .then((_) => import('./bootstrap'))
-  .catch((err) => console.error(err));
+  .then((nf: NativeFederationResult) =>
+    import('./bootstrap').then((m) => m.bootstrap(nf)),
+  )
+  .catch((err) => console.error('[shell] federation init failed', err));

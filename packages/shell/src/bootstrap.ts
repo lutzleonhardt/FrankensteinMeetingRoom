@@ -1,5 +1,7 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
+import type { NativeFederationResult } from '@softarc/native-federation-orchestrator';
 import { App } from './app/app';
+import { appConfig } from './app/app.config';
 
-bootstrapApplication(App, appConfig).catch((err) => console.error(err));
+export const bootstrap = (nf: NativeFederationResult) =>
+  bootstrapApplication(App, appConfig(nf)).catch((err) => console.error(err));
