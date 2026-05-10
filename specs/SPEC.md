@@ -596,7 +596,7 @@ Scope-boxed sequence — each milestone produces a usable artifact at which you 
 
 **Artifact.** Empty shell renders a header *"Frankenstein Meeting Room"*; browser console shows Federation init output. The federation infrastructure is live and extensible.
 
-### [ ] M2 — Host Complete: Calendar + State + Layout + Bus Log
+### [x] M2 — Host Complete: Calendar + State + Layout + Bus Log
 
 - Schedule-X integrated (weekly view) in left column
 - `MeetingService` fully implemented (Signals, `loadAll`/`persistAll`, bus listeners, `selectMeeting` / `updateMeeting` / `rebroadcastCurrent`)
@@ -606,7 +606,7 @@ Scope-boxed sequence — each milestone produces a usable artifact at which you 
 
 **Artifact.** Complete host UI with sample data. Click a meeting → details fill, event appears in log. Reload preserves any state mutation. Middle slots show *"Pick a meeting"* placeholder. The host can be demoed as a self-contained Angular app — no remotes required yet.
 
-### [ ] M3 — React Whiteboard Remote (Standalone + Integrated)
+### [x] M3 — React Whiteboard Remote (Standalone + Integrated)
 
 - `packages/whiteboard/` with `federation.config.mjs`, `build.mjs`, `package.json`
 - React app with Excalidraw inside Custom Element wrapper (`createRoot` in `connectedCallback`)

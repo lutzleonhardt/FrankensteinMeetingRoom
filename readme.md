@@ -14,7 +14,7 @@ This is **not a meeting app.** It is not production software. It demonstrates an
 
 ## Status
 
-> **Spec complete, implementation in progress.** This repository currently contains the architecture spec and milestone plan. Runnable code lands milestone by milestone — see *Milestones* below.
+> **Spec complete, implementation in progress.** Milestones M1–M3 are done: the Angular host is running with calendar, state, layout, and bus log, and the React whiteboard remote is federated in. M4 (Svelte Mermaid remote) and M5 (Polish) are next — see *Milestones* below.
 
 - Narrative walkthrough: [Dev.to series](https://dev.to/lutz_leonhardt) — Part 1 published
 - Full architectural spec: [`specs/SPEC.md`](specs/SPEC.md)
@@ -106,8 +106,8 @@ Each remote is **also runnable standalone** — open the localhost URL of a remo
 ## Milestones
 
 - [x] **M1** — Workspace + Host Skeleton + Federation Init
-- [ ] **M2** — Host complete: Calendar + State + Layout + Bus Log
-- [ ] **M3** — React Whiteboard Remote (standalone + integrated)
+- [x] **M2** — Host complete: Calendar + State + Layout + Bus Log
+- [x] **M3** — React Whiteboard Remote (standalone + integrated)
 - [ ] **M4** — Svelte Mermaid Remote (standalone + integrated)
 - [ ] **M5** — Polish + Stretch
 
