@@ -1,0 +1,20 @@
+{
+  "name": "mermaid",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node build.mjs --dev",
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "mermaid": "^11.4.1",
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@frankenstein/shared": "workspace:*",
+    "esbuild": "^0.25.1",
+    "esbuild-svelte": "^0.9.0",
+    "svelte-preprocess": "^6.0.0",
+    "typescript": "~5.9.2"
+  }
+}
