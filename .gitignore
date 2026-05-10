@@ -4,3 +4,21 @@ node_modules/
 dist/
 .angular/
 *.log
+
+# Editor / tool local state
+.vscode
+.claude/
+
+# Local drafts (not ready to publish)
+docs/m1-article-draft.md
+
+# Sandbox-injected dotfile placeholders (not project files)
+.bash_profile
+.bashrc
+.profile
+.zshrc
+.zprofile
+.gitconfig
+.ripgreprc
+.mcp.json
+.gitmodules
