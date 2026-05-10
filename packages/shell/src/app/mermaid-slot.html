@@ -1,0 +1,7 @@
+@if (remoteReady() && hasMeeting()) {
+  <mermaid-remote class="remote-mount"></mermaid-remote>
+} @else if (!remoteReady()) {
+  <div class="placeholder">Loading mermaid…</div>
+} @else {
+  <div class="placeholder">Pick a meeting</div>
+}

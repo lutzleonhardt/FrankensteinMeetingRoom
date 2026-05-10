@@ -3,10 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node build.mjs --dev",
-    "build": "node build.mjs",
+    "start:standalone:dev": "node build.mjs --dev",
+    "build:standalone": "node build.mjs",
     "build:federate": "node build.mjs --federate",
-    "build:federate:debug": "node build.mjs --federate --debug"
+    "build:federate:dev": "node build.mjs --federate --dev",
+    "dev": "pnpm build:federate:dev && pnpm start:standalone:dev",
+    "clean": "rm -rf dist node_modules/.cache/native-federation"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "~0.18.1",

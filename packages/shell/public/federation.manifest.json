@@ -1,3 +1,4 @@
 {
-  "whiteboard": "http://localhost:3000/remoteEntry.json"
+  "whiteboard": "http://localhost:3000/remoteEntry.json",
+  "mermaid": "http://localhost:4000/remoteEntry.json"
 }

@@ -24,6 +24,8 @@ export const seed: Meeting[] = [
     start: archStart,
     end: weekday(1, 11, 30),
     attendees: ['Lutz', 'Manfred', 'Yara'],
+    mermaidSource:
+      'sequenceDiagram\n  Calendar->>MeetingService: selectMeeting(id)\n  MeetingService-->>Bus: event:selected\n  Bus-->>Whiteboard: render\n  Bus-->>Mermaid: render',
     updatedAt: archStart,
   },
   {

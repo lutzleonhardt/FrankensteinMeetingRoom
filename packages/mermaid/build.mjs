@@ -6,15 +6,19 @@ import sveltePlugin from 'esbuild-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
 import { runEsBuildBuilder } from '@softarc/native-federation-esbuild';
 
+// Build-mode mental model is two-dimensional:
+//   --federate ? federate output : standalone output
+//   --dev      ? dev artifacts (sourcemaps, -dev.js chunks, no minify, NODE_ENV=development)
+//              : prod artifacts (minified, NODE_ENV=production)
+// `--dev` applies regardless of `--federate` — no separate `--debug` knob.
 const args = new Set(process.argv.slice(2));
 const isDev = args.has('--dev');
 const isFederate = args.has('--federate');
-const isDebug = args.has('--debug');
 
 mkdirSync('dist', { recursive: true });
 
 if (isFederate) {
-  await buildFederate();
+  await buildFederate({ dev: isDev });
 } else {
   await buildStandalone({ dev: isDev });
 }
@@ -49,28 +53,36 @@ async function buildStandalone({ dev }) {
   }
 }
 
-async function buildFederate() {
-  // Diagnostic mode (--debug): switches the entire NF pipeline to dev — gets
-  // sourcemaps + readable output AND has the share chunks referenced in
-  // importmap.json/remoteEntry.json (NF emits `<name>-dev.js` filenames in
-  // dev mode and the orchestrator picks them up via the manifest). Same
-  // diagnostic infra as packages/whiteboard/build.mjs (T8 Decision #4).
-  // No fileReplacements: Svelte 5 emits native ESM, so the React jsx-runtime
-  // CJS dispatcher bug (T8 Decisions #6/#7) does not apply here.
+async function buildFederate({ dev }) {
+  // Federate-dev mode (--federate --dev) switches the entire NF pipeline to
+  // dev — sourcemaps + readable output AND share chunks referenced as
+  // `<name>-dev.js` in importmap.json/remoteEntry.json (the orchestrator
+  // picks them up via the manifest). Same diagnostic infra as
+  // packages/whiteboard/build.mjs (T8 Decision #4). No fileReplacements for
+  // CJS dispatchers: Svelte 5 emits native ESM, so the React jsx-runtime
+  // bug (T8 Decisions #6/#7) does not apply here.
   const federation = await runEsBuildBuilder('federation.config.js', {
     outputPath: 'dist',
     tsConfig: 'tsconfig.json',
-    dev: isDebug,
+    dev,
     watch: false,
     entryPoints: ['src/bootstrap.ts'],
     adapterConfig: {
       plugins: [
         sveltePlugin({
           preprocess: sveltePreprocess(),
-          compilerOptions: { dev: isDebug },
+          compilerOptions: { dev },
         }),
       ],
-      define: { 'process.env.NODE_ENV': isDebug ? '"development"' : '"production"' },
+      define: { 'process.env.NODE_ENV': dev ? '"development"' : '"production"' },
+      // No fileReplacements: `svelte` is excluded from the federation share
+      // map (see federation.config.js `skip`), so its imports are resolved
+      // by plain esbuild with `platform: 'browser'` — which correctly
+      // picks `index-client.js` via the `browser` export condition without
+      // any rewriting. The earlier indirection (replacing the server entry
+      // with the client one) was needed only when svelte WAS shared, where
+      // NF's `findOptimalExport` ignored the `browser` condition and fell
+      // through to `default = index-server.js`.
     },
   });
   await federation.close();
@@ -84,7 +96,10 @@ async function buildFederate() {
   // it to a stable name (`mermaid-editor.css`) so the CE wrapper can
   // resolve it via `new URL('./mermaid-editor.css', import.meta.url).href`.
   // T9 log Key Decisions §3 already flagged this as a T10 surface.
-  const cssSidecar = readdirSync('dist').find((f) => /^Bootstrap-.*\.css$/.test(f));
+  // esbuild emits the entry chunk's CSS as `Bootstrap.css` (no hash); chunked
+  // splits would be `Bootstrap-<hash>.css`. Match both so the copy survives
+  // either layout.
+  const cssSidecar = readdirSync('dist').find((f) => /^Bootstrap(-[^/]+)?\.css$/.test(f));
   if (cssSidecar) {
     copyFileSync(join('dist', cssSidecar), join('dist', 'mermaid-editor.css'));
   }

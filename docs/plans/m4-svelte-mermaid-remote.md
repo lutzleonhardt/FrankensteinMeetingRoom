@@ -650,8 +650,15 @@ Bonus: makes the Money-Shot self-explanatory.)
 
 **Step 5 — Verify boot flow end-to-end.**
 
-Three terminals: `pnpm -F whiteboard start`, `pnpm -F mermaid start`,
-`pnpm -F shell start`. Browse `:4200`, click meetings, exercise the acceptance.
+Three terminals: `pnpm -F whiteboard dev`, `pnpm -F mermaid dev`,
+`pnpm -F shell start`. Browse `:4200`, click meetings, exercise the
+acceptance.
+(Note: the remote scripts were renamed mid-T11. `dev` = federate-dev
+build + standalone-watch dev server; the dev server serves the federate
+`dist/` artifacts on the same port, so it doubles as the
+federate-serving origin for `:4200`. The old single-step `start` is now
+`start:standalone:dev` — useful for code-only Svelte/React iteration
+when you don't need the federate output rebuilt.)
 
 ### Key Discoveries
 

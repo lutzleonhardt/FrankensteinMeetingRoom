@@ -23,15 +23,19 @@ const reactReplacements = {
   },
 };
 
+// Build-mode mental model is two-dimensional:
+//   --federate ? federate output : standalone output
+//   --dev      ? dev artifacts (sourcemaps, -dev.js chunks, no minify, NODE_ENV=development)
+//              : prod artifacts (minified, NODE_ENV=production)
+// `--dev` applies regardless of `--federate` — no separate `--debug` knob.
 const args = new Set(process.argv.slice(2));
 const isDev = args.has('--dev');
 const isFederate = args.has('--federate');
-const isDebug = args.has('--debug');
 
 mkdirSync('dist', { recursive: true });
 
 if (isFederate) {
-  await buildFederate();
+  await buildFederate({ dev: isDev });
 } else {
   await buildStandalone({ dev: isDev });
 }
@@ -71,7 +75,7 @@ async function buildStandalone({ dev }) {
   }
 }
 
-async function buildFederate() {
+async function buildFederate({ dev }) {
   // Excalidraw's CSS is exported via package.json `./index.css` with
   // development/production conditions. The federation share map externalizes
   // `@excalidraw/excalidraw/index.css` (subpath of a `keepAll: true` share)
@@ -81,24 +85,23 @@ async function buildFederate() {
   // pull it from the remote's own origin.
   copyFileSync('node_modules/@excalidraw/excalidraw/dist/prod/index.css', 'dist/excalidraw.css');
 
-  // Diagnostic mode (--debug): switch the entire NF pipeline to dev. This is
-  // the only way to get sourcemaps + readable output AND have the share
-  // chunks referenced in importmap.json/remoteEntry.json — NF writes
-  // `<name>-dev.js` filenames in dev mode and the orchestrator on the host
-  // automatically picks them up via the manifest, no shell-side change
-  // needed. Side effects of dev mode: process.env.NODE_ENV="development"
-  // and React/Excalidraw resolveConditions=development. That can change the
-  // bug surface (React dev typically yields much clearer errors than the
+  // Federate-dev mode (--federate --dev) switches the entire NF pipeline to
+  // dev. Only way to get sourcemaps + readable output AND share chunks
+  // referenced as `<name>-dev.js` in importmap.json/remoteEntry.json — the
+  // orchestrator on the host picks them up via the manifest, no shell-side
+  // change needed. Side effects: NODE_ENV="development" and
+  // React/Excalidraw resolveConditions=development. Can change the bug
+  // surface (React dev typically yields much clearer errors than the
   // production-minified "j is not a function").
   const federation = await runEsBuildBuilder('federation.config.js', {
     outputPath: 'dist',
     tsConfig: 'tsconfig.json',
-    dev: isDebug,
+    dev,
     watch: false,
     entryPoints: ['src/bootstrap.tsx'],
     adapterConfig: {
       plugins: [],
-      define: { 'process.env.NODE_ENV': isDebug ? '"development"' : '"production"' },
+      define: { 'process.env.NODE_ENV': dev ? '"development"' : '"production"' },
       // Bypass react/jsx-runtime.js's NODE_ENV dispatcher: NF's CJS share
       // bundler wraps modules in a way that the size-3 named-export
       // extraction snippet runs before the wrapped CJS body populates
@@ -106,7 +109,7 @@ async function buildFederate() {
       // the entry directly at the resolved prod (or dev) file avoids the
       // dispatcher entirely. The same applies to react/index.js,
       // react-dom/index.js, jsx-dev-runtime.js.
-      fileReplacements: isDebug ? reactReplacements.dev : reactReplacements.prod,
+      fileReplacements: dev ? reactReplacements.dev : reactReplacements.prod,
     },
   });
   await federation.close();
