@@ -12,6 +12,11 @@ type Props = {
 
 const APPSTATE_KEYS = ['viewBackgroundColor', 'gridSize', 'gridStep', 'gridModeEnabled'] as const;
 
+// Excalidraw fires onChange on every render (resize, scroll, select, mount).
+// element.version only bumps on real mutations, so this dedups cheap re-renders.
+const elementFingerprint = (elements: readonly ExcalidrawElement[]): string =>
+  elements.map((e) => `${e.id}:${e.version ?? 0}`).join('|');
+
 export function App({ initialData, onChange }: Props) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -20,12 +25,23 @@ export function App({ initialData, onChange }: Props) {
     [],
   );
 
+  const prevFingerprintRef = useRef<string>('');
+  const mountedRef = useRef(false);
+  if (!mountedRef.current) {
+    mountedRef.current = true;
+    prevFingerprintRef.current = elementFingerprint(
+      (initialData?.elements ?? []) as ExcalidrawElement[],
+    );
+  }
+
   // Excalidraw is uncontrolled: `initialData` is consumed only on mount.
   // For meeting switches we drive the canvas via the imperative API.
   const apiRef = useRef<ExcalidrawImperativeAPI | null>(null);
   useEffect(() => {
+    const els = (initialData?.elements ?? []) as ExcalidrawElement[];
+    prevFingerprintRef.current = elementFingerprint(els);
     apiRef.current?.updateScene({
-      elements: (initialData?.elements ?? []) as ExcalidrawElement[],
+      elements: els,
       appState: initialData?.appState ?? {},
     });
   }, [initialData]);
@@ -35,6 +51,9 @@ export function App({ initialData, onChange }: Props) {
     appState: AppState,
     _files: BinaryFiles,
   ) => {
+    const fp = elementFingerprint(elements);
+    if (fp === prevFingerprintRef.current) return;
+    prevFingerprintRef.current = fp;
     const trimmed: ExcalidrawDemoData = {
       elements: [...elements] as ExcalidrawElement[],
       appState: Object.fromEntries(

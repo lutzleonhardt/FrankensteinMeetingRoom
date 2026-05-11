@@ -8,6 +8,13 @@ const dateFormat = new Intl.DateTimeFormat(undefined, {
   minute: '2-digit',
 });
 
+const timeFormat = new Intl.DateTimeFormat(undefined, {
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+type ArtifactStatus = 'saved' | 'none';
+
 @Component({
   selector: 'app-meeting-details',
   imports: [PanelHeader],
@@ -26,4 +33,20 @@ export class MeetingDetails {
   });
 
   readonly attendeeList = computed(() => this.meeting()?.attendees.join(', ') ?? '');
+
+  readonly excalidrawStatus = computed<ArtifactStatus>(() =>
+    this.meeting()?.excalidrawUpdatedAt ? 'saved' : 'none',
+  );
+  readonly excalidrawTimestamp = computed(() => {
+    const ts = this.meeting()?.excalidrawUpdatedAt;
+    return ts ? timeFormat.format(new Date(ts)) : null;
+  });
+
+  readonly mermaidStatus = computed<ArtifactStatus>(() =>
+    this.meeting()?.mermaidUpdatedAt ? 'saved' : 'none',
+  );
+  readonly mermaidTimestamp = computed(() => {
+    const ts = this.meeting()?.mermaidUpdatedAt;
+    return ts ? timeFormat.format(new Date(ts)) : null;
+  });
 }

@@ -6,6 +6,26 @@
     <p class="attendees">
       <span class="label">Attendees:</span> {{ attendeeList() }}
     </p>
+    <div class="artifacts">
+      <div class="artifact-row">
+        <span class="art-label">Whiteboard</span>
+        @if (excalidrawStatus() === 'saved') {
+          <span class="pill pill--saved">Saved</span>
+          <span class="ts">{{ excalidrawTimestamp() }}</span>
+        } @else {
+          <span class="pill pill--none">No artifact yet</span>
+        }
+      </div>
+      <div class="artifact-row">
+        <span class="art-label">Mermaid</span>
+        @if (mermaidStatus() === 'saved') {
+          <span class="pill pill--saved">Saved</span>
+          <span class="ts">{{ mermaidTimestamp() }}</span>
+        } @else {
+          <span class="pill pill--none">No artifact yet</span>
+        }
+      </div>
+    </div>
   } @else {
     <p class="empty">Select a meeting from the calendar.</p>
   }

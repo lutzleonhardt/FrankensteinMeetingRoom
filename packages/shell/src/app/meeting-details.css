@@ -43,6 +43,55 @@
   margin-right: 0.25rem;
 }
 
+.artifacts {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.artifact-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.art-label {
+  color: #444;
+  font-weight: 600;
+  flex: 1;
+}
+
+.pill {
+  display: inline-block;
+  padding: 1px 0.5rem;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.pill--saved {
+  color: #0a7d3f;
+  background: #e6f4ea;
+}
+
+.pill--none {
+  color: #666;
+  background: #f0f0f0;
+}
+
+.ts {
+  color: #444;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  min-width: 3.25rem;
+  text-align: right;
+}
+
 .empty {
   margin: 0;
   height: 100%;
