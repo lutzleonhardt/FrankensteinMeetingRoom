@@ -2,6 +2,8 @@
 
 > Three frameworks, one workspace. Angular orchestrates. React draws. Svelte diagrams. Native Federation makes it work — without rewriting any of them.
 
+**Live demo →** <https://lutzleonhardt.de/frankenstein-meeting-room/>
+
 A deliberately small demo of a real enterprise frontend integration pattern: one host application, multiple inherited capabilities from foreign frameworks, one shared business context.
 
 Call it **Frankenstein-Driven Architecture**.
@@ -156,7 +158,8 @@ If your reaction is *"but a real production system would need X"*: yes, exactly.
 1. The [Dev.to series](https://dev.to/lutz_leonhardt/-the-frankenstein-meeting-room-how-to-stitch-angular-react-and-svelte-into-one-app-351g) for the narrative and the *why*.
 2. [`docs/specs/SPEC.md`](docs/specs/SPEC.md) for the technical depth.
 3. [`docs/build-modes.md`](docs/build-modes.md) for the build / dev-loop details.
-4. The code, package by package.
+4. [`docs/deployment.md`](docs/deployment.md) for the build-and-deploy workflow that produces the live demo.
+5. The code, package by package.
 
 ## License
 

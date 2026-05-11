@@ -171,3 +171,12 @@ bundler keep one copy inline.
 
 **Rule of thumb:** if a remote will never `import` it, it's a
 `devDependency` of the shell.
+
+## Deployment
+
+The full build-and-deploy workflow — `pnpm build:deploy` from the
+repo root, the one-step manual manifest swap, smoke-serve recipe,
+troubleshooting — lives in [`docs/deployment.md`](deployment.md).
+Note that the deploy manifest must use `./`-prefixed relative
+paths (`"./whiteboard/remoteEntry.json"`), not the bare form
+some earlier notes show; `docs/deployment.md` explains why.

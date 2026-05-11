@@ -666,6 +666,14 @@ Scope-boxed sequence — each milestone produces a usable artifact at which you 
 
 ---
 
+## Deployment
+
+The app ships as a fully-static bundle under a subpath. All three packages co-host in one directory tree (`/frankenstein-meeting-room/`, with `whiteboard/` and `mermaid/` as siblings), served by plain static file serving — no server logic, no CORS rules. Federation works because the shell's manifest references each remote's `remoteEntry.json` by paths relative to `document.baseURI`, so the same bundle is portable under any subpath without rebuilds.
+
+Build process and the one manual step (manifest swap from localhost URLs to `./`-prefixed relative paths) live in [`docs/deployment.md`](../deployment.md). Live demo: [`https://lutzleonhardt.de/frankenstein-meeting-room/`](https://lutzleonhardt.de/frankenstein-meeting-room/).
+
+---
+
 ## Explicit Out of Scope
 
 If asked "doesn't it need X?" — the answer is _Production concern. Prototype demonstrates the integration architecture._
