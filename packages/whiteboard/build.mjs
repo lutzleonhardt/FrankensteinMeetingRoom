@@ -1,5 +1,5 @@
 import { createServer } from 'http';
-import { copyFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
+import { copyFileSync, cpSync, readFileSync, existsSync, mkdirSync } from 'fs';
 import { extname, join } from 'path';
 import * as esbuild from 'esbuild';
 import { runEsBuildBuilder } from '@softarc/native-federation-esbuild';
@@ -84,6 +84,10 @@ async function buildFederate({ dev }) {
   // resolved via `import.meta.url` so both standalone and federated hosts
   // pull it from the remote's own origin.
   copyFileSync('node_modules/@excalidraw/excalidraw/dist/prod/index.css', 'dist/excalidraw.css');
+  // index.css references ./fonts/Assistant/*.woff2 (and at runtime Excalidraw
+  // loads other families like Excalifont). Ship the whole fonts/ tree at the
+  // path the CSS expects rather than relying on esbuild's hashed assets/.
+  cpSync('node_modules/@excalidraw/excalidraw/dist/prod/fonts', 'dist/fonts', { recursive: true });
 
   // Federate-dev mode (--federate --dev) switches the entire NF pipeline to
   // dev. Only way to get sourcemaps + readable output AND share chunks

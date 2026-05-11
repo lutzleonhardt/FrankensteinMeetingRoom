@@ -2,6 +2,9 @@
   "name": "frankenstein-meeting-room",
   "private": true,
   "version": "0.0.0",
+  "scripts": {
+    "build:deploy": "node scripts/build-deploy.mjs"
+  },
   "devDependencies": {
     "typescript": "~5.9.0"
   }
