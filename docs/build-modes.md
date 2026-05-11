@@ -37,17 +37,48 @@ loads it via Native Federation.
 
 The Angular shell uses the standard CLI:
 
-| Script                  | What it does                                                                  |
-|-------------------------|-------------------------------------------------------------------------------|
-| `pnpm -F shell start`   | `ng serve` on `:4200`                                                          |
-| `pnpm -F shell build`   | Production Angular build via `@angular/build`                                  |
-| `pnpm -F shell watch`   | `ng build --watch --configuration development`                                 |
-| `pnpm -F shell clean`   | `rm -rf dist .angular/cache node_modules/.cache/native-federation`             |
+| Script                        | What it does                                                                  |
+|-------------------------------|-------------------------------------------------------------------------------|
+| `pnpm -F shell start`         | `ng serve` on `:4200`                                                          |
+| `pnpm -F shell build`         | Production Angular build via `@angular/build` (wrapped — see below)            |
+| `pnpm -F shell build:deploy`  | `build` + `--base-href /frankenstein-meeting-room/` for the M6 subpath bundle  |
+| `pnpm -F shell watch`         | `ng build --watch --configuration development`                                 |
+| `pnpm -F shell clean`         | `rm -rf dist .angular/cache node_modules/.cache/native-federation`             |
 
 The host has no `--dev` flag of its own — Angular's `start` is
 already a dev server, `build` is already prod. The remotes are
 loaded at runtime from their own dev servers, so the host doesn't
 need to know which mode they are in.
+
+### Why `build` / `build:deploy` go through a Node wrapper
+
+Both scripts shell out to `scripts/ng-build.mjs`, not directly to
+`ng build`. The `@angular-architects/native-federation-v4` builder
+finishes writing the artifacts (`dist/shell/browser/index.html` and
+chunks) but then does not exit — the NF post-step hangs
+indefinitely. Manual usage is fine (`Ctrl-C` once the bundle
+summary prints), but it's a silent trap when running under an
+agent or in CI: the wrapper sees no completion event and the
+build appears stuck.
+
+The wrapper sidesteps this without trying to fix the upstream
+issue:
+
+1. Pre-delete `dist/shell/browser/index.html` so a prior artifact
+   can't masquerade as a successful re-build.
+2. Run `ng build …` in its own process group with `stdio:
+   'inherit'` (full output preserved).
+3. Poll for `dist/shell/browser/index.html`. When it appears,
+   `SIGKILL` the process group and exit `0`.
+4. If `ng build` exits on its own before the artifact appears,
+   propagate its exit code — real compile errors are not masked.
+5. Hard ceiling of 5 minutes guards against a genuinely stuck
+   build (never hit in normal operation; would indicate a real
+   problem).
+
+Net effect: `pnpm -F shell build` and `pnpm -F shell build:deploy`
+exit cleanly in seconds with the same artifacts as a hand-killed
+`ng build`. The wrapper lives at `packages/shell/scripts/ng-build.mjs`.
 
 ## Why the `clean` script exists
 

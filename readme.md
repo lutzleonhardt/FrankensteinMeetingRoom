@@ -106,7 +106,7 @@ The two remotes build along two orthogonal axes — standalone vs. federate, dev
 | `build:federate:dev` | Same as above, with sourcemaps and `NODE_ENV=development`. |
 | `clean` | Wipes `dist/` + cached federation metadata. Run before switching modes. |
 
-The host uses the stock Angular CLI (`start` / `build`) plus its own `clean` that also clears `.angular/cache` and the Native Federation cache.
+The host uses the stock Angular CLI (`start` / `build`) plus its own `clean` that also clears `.angular/cache` and the Native Federation cache. `build` and `build:deploy` go through a small Node wrapper (`packages/shell/scripts/ng-build.mjs`) that exits as soon as the artifacts land, because the `@angular-architects/native-federation-v4` post-step hangs after a successful build — see [`docs/build-modes.md`](docs/build-modes.md#why-build--builddeploy-go-through-a-node-wrapper).
 
 The `clean` scripts exist because Native Federation's caches and `dist/` can carry stale state across `ng build` ↔ `ng serve` transitions and across standalone-vs-federate builds. See [`docs/build-modes.md`](docs/build-modes.md) for the full story (including why `Schedule-X` lives in `devDependencies`).
 

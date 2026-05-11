@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "node scripts/ng-build.mjs",
+    "build:deploy": "node scripts/ng-build.mjs --base-href /frankenstein-meeting-room/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "clean": "rm -rf dist .angular/cache node_modules/.cache/native-federation"
