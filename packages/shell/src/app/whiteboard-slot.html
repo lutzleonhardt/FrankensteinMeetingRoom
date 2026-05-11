@@ -1,3 +1,4 @@
+<app-panel-header title="Whiteboard" framework="react" [standaloneUrl]="standaloneUrl()"></app-panel-header>
 @if (remoteReady() && hasMeeting()) {
   <whiteboard-remote class="remote-mount"></whiteboard-remote>
 } @else if (!remoteReady()) {

@@ -1,60 +1,127 @@
 :host {
-  --header-h: 3rem;
+  --header-h: 3.5rem;
+  --footer-h: 1.75rem;
+  --page-bg: #faf6ee;
+  --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
   display: block;
 }
 
 header {
+  position: relative;
   height: var(--header-h);
   margin: 0;
-  padding: 0 1rem;
+  padding: 0.4rem 1rem;
   display: flex;
-  align-items: center;
-  font-weight: 600;
+  flex-direction: column;
+  justify-content: center;
   border-bottom: 1px solid #e5e5e5;
   box-sizing: border-box;
+  background: #fff;
+}
+
+/* Three-band brand stripe — Angular / React / Svelte, equal thirds.
+   Sits flush under the header's bottom border so the stripe reads as part
+   of the chrome, not a separator. */
+header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: linear-gradient(
+    to right,
+    #DD0031 0%, #DD0031 33.33%,
+    #61DAFB 33.33%, #61DAFB 66.66%,
+    #FF3E00 66.66%, #FF3E00 100%
+  );
+}
+
+.brand {
+  margin: 0;
+  font-family: Georgia, 'Source Serif Pro', 'Times New Roman', serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: #1f2937;
+}
+
+.subtitle {
+  margin: 0.1rem 0 0;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.subtitle .nf-link {
+  color: #374151;
+  text-decoration: none;
+  border-bottom: 1px dotted #9ca3af;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.subtitle .nf-link:hover {
+  color: #111827;
+  border-bottom-style: solid;
 }
 
 .layout {
-  height: calc(100vh - var(--header-h));
+  height: calc(100vh - var(--header-h) - var(--footer-h));
   display: grid;
-  grid-template-columns: 25% 50% 25%;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
   grid-template-rows: 1fr;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--page-bg);
+  box-sizing: border-box;
   overflow: hidden;
 }
 
 .col-left {
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .col-mid,
 .col-right {
   display: grid;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.5rem;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
-.cell {
-  min-height: 0;
-  box-sizing: border-box;
-  padding: 1rem;
-  border: 1px dashed #cfcfcf;
+footer.legend {
+  height: var(--footer-h);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.placeholder {
-  color: #888;
+  gap: 0.4rem;
+  padding: 0 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+  color: #555;
+  font-size: 0.75rem;
   font-style: italic;
+  box-sizing: border-box;
 }
 
-.card {
-  background: #fafafa;
-  align-items: flex-start;
-  justify-content: flex-start;
-  font-weight: 500;
+footer.legend a {
+  color: #374151;
+  text-decoration: none;
+  border-bottom: 1px dotted #9ca3af;
+  font-style: normal;
+}
+
+footer.legend a:hover {
+  color: #111827;
+  border-bottom-style: solid;
+}
+
+footer.legend .sep {
+  color: #d1d5db;
+  font-style: normal;
 }
 
 .viewport-too-narrow {
@@ -63,6 +130,10 @@ header {
 
 @media (max-width: 1279.98px) {
   .layout {
+    display: none;
+  }
+
+  footer.legend {
     display: none;
   }
 

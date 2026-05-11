@@ -41,8 +41,21 @@
 </div>
 
 <style>
-  .editor { display: grid; grid-template-columns: 2fr 3fr; grid-template-rows: 1fr; gap: 8px; height: 100%; }
-  textarea { width: 100%; height: 100%; font-family: monospace; resize: none; box-sizing: border-box; }
+  .editor { display: grid; grid-template-columns: 2fr 3fr; grid-template-rows: 1fr; gap: 8px; height: 100%; padding: 8px; box-sizing: border-box; }
+  textarea {
+    width: 100%;
+    height: 100%;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem;
+    resize: none;
+    box-sizing: border-box;
+    background: rgba(255, 62, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 8px;
+    color: #1f2937;
+  }
+  textarea:focus { outline: 2px solid rgba(255, 62, 0, 0.35); outline-offset: -2px; border-color: transparent; }
   .preview { overflow: auto; padding: 8px; }
   .error { color: #b00020; white-space: pre-wrap; }
 </style>

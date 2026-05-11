@@ -5,6 +5,7 @@ import { CalendarComponent } from '@schedule-x/angular';
 import { createCalendar, createViewWeek } from '@schedule-x/calendar';
 import type { Meeting } from '@frankenstein/shared/types';
 import { MeetingService } from './meeting.service';
+import { PanelHeader } from './panel-header';
 
 const tz = Temporal.Now.timeZoneId();
 
@@ -17,7 +18,7 @@ const toSx = (m: Meeting) => ({
 
 @Component({
   selector: 'app-calendar',
-  imports: [CalendarComponent],
+  imports: [CalendarComponent, PanelHeader],
   templateUrl: './calendar.html',
   styleUrl: './calendar.css',
 })

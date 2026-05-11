@@ -1,5 +1,6 @@
 import { Component, OnDestroy, signal } from '@angular/core';
 import { ALL_BUS_EVENTS, on, type BusEventName } from '@frankenstein/shared/bus';
+import { PanelHeader } from './panel-header';
 
 type BusLogEntry = {
   name: BusEventName;
@@ -12,7 +13,7 @@ const PAYLOAD_PREVIEW_MAX = 80;
 
 @Component({
   selector: 'app-bus-log',
-  imports: [],
+  imports: [PanelHeader],
   templateUrl: './bus-log.html',
   styleUrl: './bus-log.css',
 })

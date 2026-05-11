@@ -1,3 +1,4 @@
+<app-panel-header title="Mermaid Editor" framework="svelte" [standaloneUrl]="standaloneUrl()"></app-panel-header>
 @if (remoteReady() && hasMeeting()) {
   <mermaid-remote class="remote-mount"></mermaid-remote>
 } @else if (!remoteReady()) {

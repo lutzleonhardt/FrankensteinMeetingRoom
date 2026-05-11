@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { MeetingService } from './meeting.service';
+import { PanelHeader } from './panel-header';
 
 const dateFormat = new Intl.DateTimeFormat(undefined, {
   weekday: 'short',
@@ -9,7 +10,7 @@ const dateFormat = new Intl.DateTimeFormat(undefined, {
 
 @Component({
   selector: 'app-meeting-details',
-  imports: [],
+  imports: [PanelHeader],
   templateUrl: './meeting-details.html',
   styleUrl: './meeting-details.css',
 })

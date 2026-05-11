@@ -7,9 +7,11 @@ import {
 } from '@angular/core';
 import { MODULE_LOADER } from './app.config';
 import { MeetingService } from './meeting.service';
+import { PanelHeader } from './panel-header';
 
 @Component({
   selector: 'app-mermaid-slot',
+  imports: [PanelHeader],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './mermaid-slot.html',
   styleUrl: './mermaid-slot.css',
@@ -20,11 +22,19 @@ export class MermaidSlot {
 
   readonly remoteReady = signal(false);
   readonly hasMeeting = computed(() => this.service.currentMeeting() !== null);
+  // Standalone URL is the same origin as the remoteEntry — pulled from the
+  // orchestrator's remote-info repo after the bundle loads. Stays null on load
+  // failure, which hides the icon (no link to a remote we couldn't reach).
+  readonly standaloneUrl = signal<string | null>(null);
 
   constructor() {
     this.loader
       .loadRemoteModule('mermaid', './Bootstrap')
-      .then(() => this.remoteReady.set(true))
+      .then(() => {
+        this.remoteReady.set(true);
+        const info = this.loader.adapters.remoteInfoRepo.tryGet('mermaid').get();
+        if (info?.scopeUrl) this.standaloneUrl.set(info.scopeUrl);
+      })
       .catch((err) => console.error('[shell] mermaid remote failed to load', err));
   }
 }
