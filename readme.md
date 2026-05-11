@@ -6,18 +6,24 @@ A deliberately small demo of a real enterprise frontend integration pattern: one
 
 Call it **Frankenstein-Driven Architecture**.
 
-![LabNotebook.png](specs/LabNotebook.png)
+![LabNotebook.png](docs/specs/LabNotebook.png)
 
 > **Remote owns capability. Host owns business context and persistence.**
 
 This is **not a meeting app.** It is not production software. It demonstrates an integration architecture for heterogeneous frontend stacks — the kind of stack you find inside any enterprise after two acquisitions and a framework war.
 
-## Status
+## TL;DR — Run it
 
-> **Spec complete, implementation in progress.** Milestones M1–M3 are done: the Angular host is running with calendar, state, layout, and bus log, and the React whiteboard remote is federated in. M4 (Svelte Mermaid remote) and M5 (Polish) are next — see *Milestones* below.
+```bash
+pnpm install
+pnpm -F whiteboard dev   # http://localhost:3000 — React remote
+pnpm -F mermaid    dev   # http://localhost:4000 — Svelte remote
+pnpm -F shell      start # http://localhost:4200 — Angular host
+```
 
-- Narrative walkthrough: [Dev.to series](https://dev.to/lutz_leonhardt) — Part 1 published
-- Full architectural spec: [`specs/SPEC.md`](specs/SPEC.md)
+Open `http://localhost:4200`, click **Architecture Review** in the calendar — the [demo flow](#demo-flow) starts there.
+
+Each remote also runs solo on its own port — open `:3000` or `:4000` directly to see the remote without the shell.
 
 ## Architecture in One Sketch
 
@@ -47,39 +53,21 @@ Each remote is a complete app in its own framework, exposed as a Custom Element.
 | Persistence | LocalStorage |
 | Workspace | pnpm |
 
-### Host-only deps live in `devDependencies`
-
-Schedule-X and its transitive runtime (`preact`, `@preact/signals`,
-`temporal-polyfill`) are pinned in the shell's **devDependencies**, not
-`dependencies`. Same goes for `@frankenstein/shared`. The reason is
-Native Federation's share map: `shareAll` iterates `dependencies` only,
-so anything listed there gets emitted as a separately-loaded shared
-chunk and added to the import map for remotes to consume.
-
-For host-only code that no remote will ever import — the calendar, the
-internal bus types — sharing buys nothing and costs real correctness.
-The Schedule-X Preact tree in particular breaks the moment the runtime
-sees two Preact module instances (federated copy + a deep-import path
-that slips past the import map), with the canonical `__H` undefined
-crash. Keeping these out of `dependencies` sidesteps the whole class
-of single-instance / version-skew problems and lets vite bundle one
-copy inline.
-
-Rule of thumb: if a remote will never `import` it, it's a
-`devDependency` of the shell.
-
 ## Repository Layout
 
 ```
 frankenstein-meeting-room/
 ├── pnpm-workspace.yaml
-├── specs/
-│   └── SPEC.md                  ← full architectural spec
+├── docs/
+│   ├── specs/SPEC.md          ← full architectural spec
+│   ├── build-modes.md         ← build scripts, dev/prod, clean
+│   ├── plans/                 ← per-milestone task plans
+│   └── task-log/              ← per-task implementation logs
 └── packages/
-    ├── shared/                  ← bus.ts, types.ts, seed.ts
-    ├── shell/                   ← Angular host
-    ├── whiteboard/              ← React remote (Excalidraw)
-    └── mermaid/                 ← Svelte remote (Mermaid)
+    ├── shared/                ← bus.ts, types.ts, seed.ts
+    ├── shell/                 ← Angular host
+    ├── whiteboard/            ← React remote (Excalidraw)
+    └── mermaid/               ← Svelte remote (Mermaid)
 ```
 
 ## Quick Start
@@ -91,27 +79,48 @@ pnpm install
 Run the host and both remotes in three separate terminals:
 
 ```bash
-# terminal 1 — Angular host
-pnpm --filter shell start          # http://localhost:4200
+# terminal 1 — React whiteboard remote (federate build + standalone watch)
+pnpm -F whiteboard dev          # http://localhost:3000
 
-# terminal 2 — React whiteboard remote
-pnpm --filter whiteboard start     # http://localhost:3000
+# terminal 2 — Svelte mermaid remote (federate build + standalone watch)
+pnpm -F mermaid dev             # http://localhost:4000
 
-# terminal 3 — Svelte mermaid remote
-pnpm --filter mermaid start        # http://localhost:4000
+# terminal 3 — Angular host
+pnpm -F shell start             # http://localhost:4200
 ```
 
-Each remote is **also runnable standalone** — open the localhost URL of a remote directly to see it render against a built-in mock host, no shell required. This is how the remotes get developed and debugged in isolation.
+Start the remotes before the shell — the shell loads their `remoteEntry.json` at boot.
 
-## Milestones
+Sample meetings are placed Mon/Tue/Wed of the current week by `seed.ts`, so a fresh clone always shows a populated calendar.
 
-- [x] **M1** — Workspace + Host Skeleton + Federation Init
-- [x] **M2** — Host complete: Calendar + State + Layout + Bus Log
-- [x] **M3** — React Whiteboard Remote (standalone + integrated)
-- [ ] **M4** — Svelte Mermaid Remote (standalone + integrated)
-- [ ] **M5** — Polish + Stretch
+## Build Modes
 
-Each milestone produces a usable artifact. See [`specs/SPEC.md`](specs/SPEC.md) for done-criteria per milestone.
+The two remotes build along two orthogonal axes — standalone vs. federate, dev vs. prod:
+
+| Script (per remote) | What it produces |
+|---|---|
+| `dev` | Federate (dev) + standalone dev server. Default for host-integration work. |
+| `start:standalone:dev` | Standalone dev server only (no federate output). |
+| `build:standalone` | Production standalone bundle in `dist/`. |
+| `build:federate` | Production `remoteEntry.json` + chunks in `dist/`. |
+| `build:federate:dev` | Same as above, with sourcemaps and `NODE_ENV=development`. |
+| `clean` | Wipes `dist/` + cached federation metadata. Run before switching modes. |
+
+The host uses the stock Angular CLI (`start` / `build`) plus its own `clean` that also clears `.angular/cache` and the Native Federation cache.
+
+The `clean` scripts exist because Native Federation's caches and `dist/` can carry stale state across `ng build` ↔ `ng serve` transitions and across standalone-vs-federate builds. See [`docs/build-modes.md`](docs/build-modes.md) for the full story (including why `Schedule-X` lives in `devDependencies`).
+
+## Demo Flow
+
+![Money Shot — Architecture Review with both remotes populated](docs/specs/MoneyShot.png)
+
+A 30-second click-through that exercises every integration moment. With all three dev servers running and a cleared LocalStorage:
+
+1. Open `http://localhost:4200`. The calendar shows three meetings this week.
+2. Click **Architecture Review**. Excalidraw renders a populated sketch (React remote), Mermaid renders the seeded sequence diagram (Svelte remote). The right column fills in with title, time, attendees, and the **Whiteboard / Mermaid last-changed timestamps**. The Bus Log shows one `event:selected` plus two `context:request` rebroadcasts.
+3. Edit the Mermaid source. The Bus Log shows `diagram:changed` rows at ~500 ms cadence; the **Mermaid** row in Meeting Details ticks forward.
+4. Draw on the Excalidraw canvas. The Bus Log shows `drawing:changed` rows; the **Whiteboard** row ticks. Resize / scroll / select fire *nothing* — the producer dedups by element version.
+5. Open DevTools → Network, reload, filter by `*.js`. Three distinct origins serve their respective bundles: `:4200` (Angular shell), `:3000` (React whiteboard), `:4000` (Svelte mermaid). *Three frameworks, one workspace.*
 
 ## Why This Pattern
 
@@ -144,9 +153,10 @@ If your reaction is *"but a real production system would need X"*: yes, exactly.
 
 ## Reading Order
 
-1. The [Dev.to post](https://dev.to/lutz_leonhardt/-the-frankenstein-meeting-room-how-to-stitch-angular-react-and-svelte-into-one-app-351g) for the narrative and the *why*.
-2. [`specs/SPEC.md`](specs/SPEC.md) for the technical depth.
-3. The code, milestone by milestone.
+1. The [Dev.to series](https://dev.to/lutz_leonhardt/-the-frankenstein-meeting-room-how-to-stitch-angular-react-and-svelte-into-one-app-351g) for the narrative and the *why*.
+2. [`docs/specs/SPEC.md`](docs/specs/SPEC.md) for the technical depth.
+3. [`docs/build-modes.md`](docs/build-modes.md) for the build / dev-loop details.
+4. The code, package by package.
 
 ## License
 

@@ -540,6 +540,30 @@ When no meeting is selected, the middle and right columns show a placeholder (*"
 
 ---
 
+## Framework Affordance
+
+The host runs three frameworks but the page does not show it. Each panel gets a small framework chip in its header so the architectural seam is visible at a glance — supporting the Money-Shot without making the UI noisy.
+
+**Per-panel chip.** Top-right of each panel header: a 14–16 px framework logo (official SVG), the framework name in 11–12 px monospace, and a 1 px border in the framework's brand color. Neutral background, no fill — the chip reads as a label, not a button.
+
+| Panel | Framework | Brand color |
+|---|---|---|
+| Calendar (left) | Angular | `#DD0031` |
+| Meeting Details (right top) | Angular | `#DD0031` |
+| Event Bus Log (right bottom) | Angular | `#DD0031` |
+| Whiteboard (middle top) | React | `#61DAFB` |
+| Mermaid Editor (middle bottom) | Svelte | `#FF3E00` |
+
+**Panel headers.** Every panel gets a title row owned by the host: title text on the left (e.g. *Whiteboard*, *Mermaid Editor*, *Event Bus Log*), framework chip on the right. The host wraps the remote slots in this header chrome — remotes render only their content area, the chrome is not part of the remote bundle. In standalone dev, each remote's `index.html` includes a minimal version of the same header so solo dev still shows the chip.
+
+**Trennlinien.** 1 px borders in `#e5e7eb` between the three columns and between the stacked panels in the middle and right columns. Keeps the assembly readable; reinforces the "stitched together" framing.
+
+**Footer.** One line at the bottom of the shell: *"Built with Angular + React + Svelte via Native Federation."* Honest tech statement, doubles as a legend for the chips.
+
+The logos live in `packages/shared/assets/` (three official-brand SVGs) and are imported by the host as plain assets. No new dependencies, no theming system — this is decorative metadata, not a design system.
+
+---
+
 ## Integration Moments
 
 The demo is structured around named integration moments — not features. Each moment carries an integration claim that is the actual content of the workshop or post.
@@ -616,7 +640,7 @@ Scope-boxed sequence — each milestone produces a usable artifact at which you 
 
 **Artifact.** Two delivery modes both working: (a) `npm start` in `whiteboard/` renders Excalidraw with mock-host data on `:3000`; (b) shell on `:4200` lazy-loads the remote when a meeting is selected, drawing changes persist via the host. **First federation stitching live: Angular host and React remote talking through the bus.**
 
-### [ ] M4 — Svelte Mermaid Remote (Standalone + Integrated)
+### [x] M4 — Svelte Mermaid Remote (Standalone + Integrated)
 
 - `packages/mermaid/` analogous to M3, with Svelte 5 + Mermaid lib
 - `esbuild-svelte` plugin in `build.mjs`
@@ -626,9 +650,10 @@ Scope-boxed sequence — each milestone produces a usable artifact at which you 
 
 **Artifact.** Both remotes running, V1 complete. **Money-Shot is now recordable:** Angular calendar on the left, Excalidraw and Mermaid both rendering for the same meeting in the middle, DevTools Network tab shows three frameworks loaded. Integration Moments 1–4 are alive.
 
-### [ ] M5 — Polish + Stretch
+### [x] M5 — Polish + Stretch
 
 - Curated sample data that tells a story (e.g. "Architecture Review" meeting with a pre-filled whiteboard sketch and Mermaid sequence diagram)
+- Framework Affordance: per-panel chips (Angular / React / Svelte), panel headers around all five panels including remote slots, column + panel trennlinien, footer legend (see *Framework Affordance*). Remotes' standalone `index.html` mirrors the chip for solo dev.
 - README with architecture diagram, setup instructions, demo-flow walkthrough
 - Optional: Integration Moment 5 (artifact metadata in details card)
 - Optional: Integration Moment 6 (activity feed — likely already covered by Bus Log)
