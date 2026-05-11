@@ -26,6 +26,13 @@ body {
   min-height: 0;
 }
 
+/* Schedule-X's time-grid events are clickable (we wire onEventClick)
+   but the theme leaves the cursor as default. */
+.sx__time-grid-event,
+.sx__date-grid-event {
+  cursor: pointer;
+}
+
 body {
   font-family: system-ui, -apple-system, sans-serif;
 }
