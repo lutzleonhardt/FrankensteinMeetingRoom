@@ -33,6 +33,7 @@ async function buildStandalone({ dev }) {
     sourcemap: dev,
     minify: !dev,
     plugins: [
+      esmEnvPlugin(dev),
       sveltePlugin({
         preprocess: sveltePreprocess(),
         compilerOptions: { dev },
@@ -40,10 +41,12 @@ async function buildStandalone({ dev }) {
     ],
     loader: { '.css': 'css' },
     define: { 'process.env.NODE_ENV': dev ? '"development"' : '"production"' },
+    conditions: dev ? ['development', 'browser'] : ['production', 'browser'],
     logLevel: 'info',
   });
 
   if (dev) {
+    await ctx.rebuild();
     await ctx.watch();
     startDevServer();
   } else {
@@ -69,20 +72,20 @@ async function buildFederate({ dev }) {
     entryPoints: ['src/bootstrap.ts'],
     adapterConfig: {
       plugins: [
+        esmEnvPlugin(dev),
         sveltePlugin({
           preprocess: sveltePreprocess(),
           compilerOptions: { dev },
         }),
       ],
       define: { 'process.env.NODE_ENV': dev ? '"development"' : '"production"' },
-      // No fileReplacements: `svelte` is excluded from the federation share
-      // map (see federation.config.js `skip`), so its imports are resolved
-      // by plain esbuild with `platform: 'browser'` — which correctly
-      // picks `index-client.js` via the `browser` export condition without
-      // any rewriting. The earlier indirection (replacing the server entry
-      // with the client one) was needed only when svelte WAS shared, where
-      // NF's `findOptimalExport` ignored the `browser` condition and fell
-      // through to `default = index-server.js`.
+      // No Svelte fileReplacements: `svelte` is excluded from the federation
+      // share map (see federation.config.js `skip`), so its imports are
+      // resolved by plain esbuild with `platform: 'browser'` — which correctly
+      // picks `index-client.js` via the `browser` export condition. The
+      // explicit esm-env plugin above is still needed: Svelte 5's runtime
+      // imports `DEV` from `esm-env/development`, and Softarc's source-code
+      // bundler does not forward adapter `conditions` into esbuild.
     },
   });
   await federation.close();
@@ -105,6 +108,28 @@ async function buildFederate({ dev }) {
   }
 
   console.log('Mermaid federate build complete.');
+}
+
+function esmEnvPlugin(dev) {
+  const modules = {
+    'esm-env/development': dev,
+    'esm-env/browser': true,
+    'esm-env/node': false,
+  };
+
+  return {
+    name: 'mermaid-esm-env',
+    setup(build) {
+      build.onResolve({ filter: /^esm-env\/(?:development|browser|node)$/ }, (args) => ({
+        path: args.path,
+        namespace: 'mermaid-esm-env',
+      }));
+      build.onLoad({ filter: /.*/, namespace: 'mermaid-esm-env' }, (args) => ({
+        contents: `export default ${modules[args.path] ? 'true' : 'false'};`,
+        loader: 'js',
+      }));
+    },
+  };
 }
 
 function startDevServer() {
