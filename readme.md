@@ -155,7 +155,10 @@ If your reaction is *"but a real production system would need X"*: yes, exactly.
 
 ## Reading Order
 
-1. The [Dev.to series](https://dev.to/lutz_leonhardt/-the-frankenstein-meeting-room-how-to-stitch-angular-react-and-svelte-into-one-app-351g) for the narrative and the *why*.
+1. The Dev.to series for the narrative and the *why*:
+   - [The Frankenstein Meeting Room: How to stitch Angular, React, and Svelte into one app](https://dev.to/lutz_leonhardt/-the-frankenstein-meeting-room-how-to-stitch-angular-react-and-svelte-into-one-app-351g) — the architectural argument.
+   - [Frankenstein Meeting Room — three apps in one browser tab](https://dev.to/lutz_leonhardt/frankenstein-meeting-room-three-apps-in-one-browser-tab-igi) — the build-it walkthrough.
+   - [Frankenstein Meeting Room — drei Apps in einem Browser-Tab](https://dev.to/lutz_leonhardt/frankenstein-meeting-room-drei-apps-in-einem-browser-tab-24p7) — deutsche Fassung.
 2. [`docs/specs/SPEC.md`](docs/specs/SPEC.md) for the technical depth.
 3. [`docs/build-modes.md`](docs/build-modes.md) for the build / dev-loop details.
 4. [`docs/deployment.md`](docs/deployment.md) for the build-and-deploy workflow that produces the live demo.
