@@ -13,7 +13,7 @@ import {
   globalThisStorageEntry,
 } from '@softarc/native-federation-orchestrator/options';
 
-initFederation('federation.manifest.json', {
+initFederation(`federation.manifest.json?t=${Date.now()}`, {
   ...useShimImportMap({ shimMode: true }),
   logger: consoleLogger,
   storage: globalThisStorageEntry,
