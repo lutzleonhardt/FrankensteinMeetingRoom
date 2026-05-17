@@ -14,7 +14,7 @@ export default withNativeFederation({
       },
     ),
   },
-  features: { ignoreUnusedDeps: true },
+  features: { ignoreUnusedDeps: true, integrityHashes: true },
   skip: [
     'react-dom/server',
     'react-dom/server.node',

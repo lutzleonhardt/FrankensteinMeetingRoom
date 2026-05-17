@@ -13,7 +13,7 @@ export default withNativeFederation({
       },
     ),
   },
-  features: { ignoreUnusedDeps: true },
+  features: { ignoreUnusedDeps: true, integrityHashes: true },
   // `svelte` is intentionally NOT shared. NF can only externalise
   // package-specifier imports, not relative paths. Svelte's `index-client.js`
   // (the browser entry) re-exports `mount`/`unmount`/`hydrate` from

@@ -46,5 +46,9 @@ export default withNativeFederation({
 
     // Opt-in: groups chunks in remoteEntry.json for smaller metadata file
     denseChunking: true,
+
+    // SRI metadata emission (consumed in Task 20). Production-only — dev
+    // builds skip the build:federate path, so watch-rebuilds stay hash-free.
+    integrityHashes: true,
   },
 });
