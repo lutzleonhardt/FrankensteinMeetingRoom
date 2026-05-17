@@ -112,6 +112,50 @@ The host uses the stock Angular CLI (`start` / `build`) plus its own `clean` tha
 
 The `clean` scripts exist because Native Federation's caches and `dist/` can carry stale state across `ng build` ↔ `ng serve` transitions and across standalone-vs-federate builds. See [`docs/build-modes.md`](docs/build-modes.md) for the full story (including why `Schedule-X` lives in `devDependencies`).
 
+## Subresource Integrity
+
+Federation is a dynamic-loading architecture: the shell at runtime fetches a manifest, then each remote's `remoteEntry.json`, then each remote's chunks. Every one of those network calls is a potential tampering surface — flip a byte in any of them and you flip what executes in the user's browser. The production build closes this surface with [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity): every dynamically-loaded file is hashed at build time, the hash travels with the reference, and the runtime refuses to execute a file whose bytes don't match.
+
+Four entry points need to be locked down — three `remoteEntry.json` files (shell, whiteboard, mermaid) and the federation manifest itself. They're chained, not flat: each link certifies the next, and the chain's anchor is the shell bundle itself.
+
+```
+main.js  (Trust Root — built into the shell bundle)
+  ├── manifestIntegrity              ← hash of federation.manifest.json
+  └── hostRemoteEntry.integrity      ← hash of the shell's remoteEntry.json
+
+federation.manifest.json
+  ├── whiteboard: { url, integrity } ← hash of whiteboard/remoteEntry.json
+  └── mermaid:    { url, integrity } ← hash of mermaid/remoteEntry.json
+
+<remote>/remoteEntry.json
+  └── integrity: { "<chunk>.js": "sha384-…" }   ← per-chunk hashes
+```
+
+The shell's `main.js` carries two hard-coded hashes — the manifest's hash and its own `remoteEntry.json`'s hash. Whoever can rewrite `main.js` can break the chain, but at that point they own the shell and the discussion is over. Everything below `main.js` is covered transitively: the manifest hash gates the manifest, which gates each remote, which gates that remote's chunks.
+
+### What Native Federation gives you, and what you have to build yourself
+
+Native Federation ships the *primitives* — per-chunk hashing inside each `remoteEntry.json`, runtime verification of fetched bytes, and runtime support for the `{ url, integrity }` option shapes. It does **not** ship the build-time choreography that turns those primitives into an end-to-end chain. That part is application-specific (which manifest, which host builder, two-pass vs. `define` vs. codegen) and lives in your own deploy script. If you're adapting this pattern to a different repo, the split looks like this:
+
+| Step | Who? |
+|---|---|
+| Per-chunk hashes inside each `remoteEntry.json` (`integrity: { "<chunk>.js": "sha384-…" }`) | **Native Federation** (once `features.integrityHashes: true` is set in `federation.config.*`) |
+| Runtime verification of fetched `federation.manifest.json` and `remoteEntry.json` bytes | **NF Orchestrator** in JS, via `crypto.subtle.digest()`. JSON isn't a `<script>`, so browser-native SRI doesn't apply. |
+| Runtime verification of each chunk against the importmap `integrity` entries | **`es-module-shims`** in JS. Browser-native importmap-integrity is specced but not universally enforced; the shim closes the gap. `useShimImportMap({ shimMode: true })` is load-bearing — without it, chunk-level SRI silently degrades. |
+| Runtime support for `manifestIntegrity` / `hostRemoteEntry: { url, integrity }` options on `initFederation` | **NF Orchestrator** |
+| Hashing each `remoteEntry.json` file *as a whole* (the wrapper, not its inner chunks) | **You** (build script) |
+| Composing the prod manifest with object-shape entries and the `./`-prefix | **You** (build script) |
+| Hashing the prod manifest | **You** (build script) |
+| Hashing the host's own `remoteEntry.json` | **You** (build script) — needs a two-pass host build to break the chicken-and-egg |
+| Injecting those three hashes into the host bundle as compile-time constants | **You** (codegen or `define` — your host builder's choice) |
+| Dev/prod toggle so `ng serve` and watch rebuilds stay SRI-free | **You** |
+
+In this repo, "you" is [`scripts/build-deploy.mjs`](scripts/build-deploy.mjs) plus the generated [`packages/shell/src/generated/sri-constants.ts`](packages/shell/src/generated/sri-constants.ts). If you're porting the pattern, that's the file pair to clone.
+
+> **Why `es-module-shims` is mandatory.** Importmap entries can carry an `integrity` block that tells the browser to verify each dynamically-imported module against a hash. The spec exists, but native browser enforcement is still rolling out and **not universally implemented** as of writing. A browser without enforcement will simply ignore the `integrity` block — chunk-level SRI degrades silently, with no error, no console warning, no broken page. That's the worst possible failure mode for a security feature: it looks like it works. [`es-module-shims`](https://github.com/guybedford/es-module-shims), running in `shimMode: true`, takes over module loading in JS and enforces the integrity check itself. As long as it's loaded as a polyfill and the orchestrator is configured with `useShimImportMap({ shimMode: true })`, chunk-level SRI is verified consistently across all evergreen browsers — independent of how far each one's native implementation has progressed. Drop the shim and module-level SRI becomes "best effort"; keep it and the chain is closed end-to-end.
+
+SRI is **production-only**. Dev mode (`pnpm run dev`, `ng serve`) is SRI-free so that watch-driven rebuilds of one remote don't force a shell rebuild. The full build-pipeline mechanics — two-pass shell build, secure-context requirement, recovery hints — live in [`docs/deployment.md`](docs/deployment.md#subresource-integrity). The Native Federation orchestrator's canonical SRI documentation: [`native-federation.com/docs/orchestrator/security.html#subresource-integrity`](https://native-federation.com/docs/orchestrator/security.html#subresource-integrity).
+
 ## Demo Flow
 
 ![Money Shot — Architecture Review with both remotes populated](docs/specs/MoneyShot.png)
@@ -143,7 +187,7 @@ Old code keeps shipping. New capabilities arrive as islands. No all-or-nothing r
 This is a demo of an integration architecture, not a production application. Deliberately out of scope:
 
 - Authentication and authorization
-- Cross-origin deployment, CSP, SRI hardening
+- Cross-origin deployment, CSP hardening (SRI *is* in scope — see [Subresource Integrity](#subresource-integrity))
 - Backend persistence, server-side rendering
 - Multi-user collaboration, optimistic locking, CRDTs
 - Contract versioning between host and remotes

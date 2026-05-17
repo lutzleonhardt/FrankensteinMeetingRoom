@@ -12,12 +12,22 @@ import {
   consoleLogger,
   globalThisStorageEntry,
 } from '@softarc/native-federation-orchestrator/options';
+import {
+  sriEnabled,
+  manifestIntegrity,
+  hostRemoteEntryIntegrity,
+} from './generated/sri-constants';
+
+const hostRemoteEntry = sriEnabled
+  ? { url: './remoteEntry.json', integrity: hostRemoteEntryIntegrity }
+  : './remoteEntry.json';
 
 initFederation(`federation.manifest.json?t=${Date.now()}`, {
   ...useShimImportMap({ shimMode: true }),
   logger: consoleLogger,
   storage: globalThisStorageEntry,
-  hostRemoteEntry: './remoteEntry.json',
+  hostRemoteEntry,
+  ...(sriEnabled ? { manifestIntegrity } : {}),
   logLevel: 'debug',
 })
   .then((nf: NativeFederationResult) =>

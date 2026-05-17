@@ -45,45 +45,32 @@ post-deploy:
 
 ## Build steps
 
-The deploy build has exactly one manual step: editing the shell's
-federation manifest from localhost URLs to relative paths. The
-rest is `pnpm build:deploy` from the repo root.
+The deploy build is `pnpm build:deploy` from the repo root — no
+manual manifest edit required. The orchestrator generates the
+prod-shape `federation.manifest.json` from scratch (relative,
+`./`-prefixed URLs, object-shape entries with SRI hashes) and
+writes it directly into `dist/deploy/`. The dev-shape manifest
+at `packages/shell/public/federation.manifest.json` (with
+`http://localhost:*` URLs) is left alone and stays the source of
+truth for `ng serve`.
 
-1. **Edit `packages/shell/public/federation.manifest.json`.**
-   Replace the localhost URLs with `./`-prefixed relative paths:
-
-   ```json
-   {
-     "whiteboard": "./whiteboard/remoteEntry.json",
-     "mermaid":    "./mermaid/remoteEntry.json"
-   }
-   ```
-
-   The `./` prefix is load-bearing — see *Why the `./` prefix
-   matters* below. The orchestrator prints a pre-flight warning
-   if the manifest still references `http://localhost`, but it
-   does not abort — the warning is a safety net, not a gate.
-
-2. **Build from repo root:**
+1. **Build from repo root:**
 
    ```bash
    pnpm build:deploy
    ```
 
-   This runs `clean` on all three packages, then `build:deploy`
-   on the shell and `build:standalone` + `build:federate` on both
-   remotes. The orchestrator assembles everything into
-   `dist/deploy/` matching the layout above.
+   This runs `clean` on all three packages, builds both remotes
+   first (their `remoteEntry.json` hashes seed the prod manifest),
+   then builds the shell **twice** so the shell's own
+   `remoteEntry.json` hash can be baked into `main.js` (see
+   *Subresource Integrity* below). The orchestrator assembles
+   everything into `dist/deploy/` matching the layout above.
 
-3. **Upload `dist/deploy/`** to the server at
+2. **Upload `dist/deploy/`** to the server at
    `/frankenstein-meeting-room/`. Contents only — the
    `dist/deploy/` directory itself is the root of the deployed
    subtree, not a child of it.
-
-4. **Revert the manifest** to the localhost URLs for further dev
-   work. `pnpm install` does not touch the manifest, so the
-   revert is a manual `git restore packages/shell/public/federation.manifest.json`
-   (or an editor edit) — whichever fits your flow.
 
 ## Why the `./` prefix matters
 
@@ -103,6 +90,61 @@ right file. The plan text and earlier task notes occasionally
 showed the bare form — the canonical, working shape is the
 `./`-prefixed one used in this document.
 
+## Subresource Integrity
+
+The production build is SRI-hardened end-to-end. Every dynamic
+load the shell performs at runtime — the federation manifest, the
+shell's own `remoteEntry.json`, each remote's `remoteEntry.json`,
+and each remote's chunks — is verified against a SHA-384 hash
+computed at build time. A tampered file fails the integrity check
+and refuses to execute; SRI does not silently degrade.
+
+The hash chain anchors in `main.js`:
+
+```
+main.js  (Trust Root — built into the shell bundle)
+  ├── manifestIntegrity              ← hash of federation.manifest.json
+  └── hostRemoteEntry.integrity      ← hash of the shell's remoteEntry.json
+
+federation.manifest.json
+  ├── whiteboard: { url, integrity } ← hash of whiteboard/remoteEntry.json
+  └── mermaid:    { url, integrity } ← hash of mermaid/remoteEntry.json
+
+<remote>/remoteEntry.json
+  └── integrity: { "<chunk>.js": "sha384-…" }   ← per-chunk hashes
+```
+
+Implementation notes:
+
+- **Production-only.** `pnpm run dev` and `ng serve` stay
+  SRI-free — `packages/shell/src/generated/sri-constants.ts` is
+  a committed stub with `sriEnabled = false`. Watch-driven
+  rebuilds of a single remote do not cascade into a shell rebuild.
+- **Two-pass shell build.** The shell's own `remoteEntry.json` is
+  produced by the shell build itself, so `build-deploy.mjs` runs
+  the shell build twice: pass 1 to emit `remoteEntry.json`, hash
+  it, then pass 2 to bake that hash plus the manifest hash into
+  `main.js` via a generated `sri-constants.ts`. A sanity check
+  asserts pass-2's `remoteEntry.json` is byte-identical to pass 1
+  — if it drifts, the build aborts.
+- **Build-order constraint.** Remotes must build before the shell
+  so their `remoteEntry.json` hashes can be folded into the prod
+  manifest, whose hash is then baked into the shell. The
+  orchestrator enforces this; do not reorder.
+- **Secure-context requirement.** `crypto.subtle.digest` (used by
+  the Native Federation orchestrator to verify response bytes)
+  only resolves under HTTPS or `localhost`. Plain-HTTP staging
+  silently breaks SRI; both the live demo
+  (`https://lutzleonhardt.de/…`) and the local smoke recipe
+  (`localhost`) satisfy this.
+- **Recovery from interrupted builds.** If `build-deploy.mjs` is
+  killed mid-run and leaves `sri-constants.ts` in its prod state,
+  `git checkout packages/shell/src/generated/sri-constants.ts`
+  restores the dev stub.
+
+Further reading:
+[Native Federation — Subresource Integrity](https://native-federation.com/docs/orchestrator/security.html#subresource-integrity).
+
 ## Server requirements
 
 Plain static file serving. No special configuration:
@@ -112,8 +154,9 @@ Plain static file serving. No special configuration:
   shell handles its own routing in-memory; direct deep links to
   `…/whiteboard/` and `…/mermaid/` hit real `index.html` files
   on disk.
-- No HTTPS gymnastics — the host's deployment URL is served by
-  the same origin as the parent site.
+- HTTPS or `localhost` is required for SRI to function (see
+  *Subresource Integrity* above). Plain-HTTP staging will
+  silently fail integrity checks.
 - MIME types: `.json` must be served as `application/json` (or
   `text/json`); `remoteEntry.json` is fetched and parsed as
   JSON. Most static hosts do this by default.
@@ -165,6 +208,14 @@ when done, or just `rm -rf dist/` and rebuild next time.
   federate build copies the upstream `fonts/` tree alongside
   `excalidraw.css`. If it does, you're on an older revision; pull
   latest.
+- **Console: "Failed to find a valid digest in the 'integrity'
+  attribute" or "integrity check failed".** SRI rejected a file
+  whose bytes don't match the baked hash. Either the deployed
+  tree drifted from the build artifacts (re-upload `dist/deploy/`
+  as a single unit), the server is rewriting `remoteEntry.json`
+  or the manifest (proxy adding whitespace, gzip-on-the-fly
+  changing bytes — verify with `curl --compressed`), or the
+  shell is being served over plain HTTP without a secure context.
 
 ## Operations (out of repo)
 
